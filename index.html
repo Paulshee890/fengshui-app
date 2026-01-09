@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2E5A44">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>풍수 홈 스타일링 (Feng Shui Styling)</title>
     <style>
         /* =========================================
@@ -192,7 +194,10 @@
         }
 
         /* S03: Capture & Option */
-        .capture-view { flex: 1; background: #222; position: relative; }
+        .capture-view { flex: 1; background: #222; position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        /* 이미지 스타일 중요: 꽉 차게 설정 */
+        .capture-view img { width: 100%; height: 100%; object-fit: cover; }
+
         .option-panel { background: var(--white); border-radius: 24px 24px 0 0; padding: 25px 20px; min-height: 400px; }
         .tab-group { display: flex; gap: 8px; margin-bottom: 20px; }
         .tab-btn { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; text-align: center; font-weight: 600; cursor: pointer; }
@@ -252,7 +257,9 @@
 <body>
 
 <div id="app-frame">
-  <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">    
+    
+    <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+
     <section id="s00-splash" class="screen active">
         <div class="splash-glow"></div>
         <div class="splash-logo">
@@ -328,7 +335,7 @@
             <button class="nav-btn" style="color:white;" onclick="router('s02-main')">✕</button>
         </div>
         <div class="capture-view">
-            <img id="preview-img" src="https://placehold.co/375x400/333/666?text=Camera+View" style="width:100%; height:100%; object-fit:cover; opacity:0.6;">
+            <img id="preview-img" src="https://placehold.co/375x600/333/666?text=Preview" style="width:100%; height:100%; object-fit:cover; opacity:0.6;">
         </div>
         <div class="option-panel">
             <h2 class="h2" style="margin-bottom: 15px;">어떤 공간인가요?</h2>
@@ -476,11 +483,11 @@
 
     // --- Router ---
     function router(screenId) {
-        // Handle Back Button logic (Simple)
+        // Handle Back Button logic
         const screens = document.querySelectorAll('.screen');
         screens.forEach(s => {
             if(s.id === screenId) s.classList.add('active');
-            else if(s.id !== 's00-splash') s.classList.remove('active'); // Keep splash under if needed, but normally hide
+            else if(s.id !== 's00-splash') s.classList.remove('active');
         });
         
         // Special init logic per screen
@@ -492,8 +499,7 @@
     // --- S00: Splash Logic ---
     window.onload = function() {
         setTimeout(() => {
-            document.getElementById('s00-splash').style.transform = 'translateY(-100%)'; // Slide up
-            // Check session (Mock) -> Go to Profile first
+            document.getElementById('s00-splash').style.transform = 'translateY(-100%)'; 
             router('s01-profile');
         }, 2500);
     };
@@ -525,7 +531,7 @@
 
     function selectUser(id) {
         appData.currentUser = id;
-        renderProfiles(); // Re-render to show active state
+        renderProfiles();
     }
 
     document.getElementById('btn-select-profile').onclick = function() {
@@ -536,7 +542,6 @@
     function openModal() { document.getElementById('modal-add-profile').style.display = 'flex'; }
     function closeModal() { document.getElementById('modal-add-profile').style.display = 'none'; }
     function handleAddProfile() {
-        // Mock Add
         appData.users.push({ id: Date.now(), name: '새 가족', animal: '🐰', element: '목(Wood) 부족' });
         closeModal();
         renderProfiles();
@@ -561,6 +566,38 @@
         });
     }
 
+    // --- Camera & Gallery Logic (Updated for Fix) ---
+    function triggerCamera() {
+        document.getElementById('file-input').click();
+    }
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // S03 화면의 이미지 태그 찾기 (ID로 확실하게)
+            const imgElement = document.getElementById('preview-img');
+            
+            if (imgElement) {
+                imgElement.src = e.target.result;
+                imgElement.style.opacity = '1';
+                // 스타일 강제 적용
+                imgElement.style.width = '100%';
+                imgElement.style.height = '100%';
+                imgElement.style.objectFit = 'cover';
+            }
+            
+            // 화면 이동
+            router('s03-capture');
+        };
+        reader.readAsDataURL(file);
+        
+        // Reset input to allow re-selection
+        event.target.value = ''; 
+    }
+
     // --- S03: Capture Logic ---
     function toggleTab(el, type) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('selected'));
@@ -573,7 +610,7 @@
         container.innerHTML = '';
         const list = appData.spaces[type];
         list.forEach((space, idx) => {
-            const isSelected = idx === 0 ? 'selected' : ''; // Default select first
+            const isSelected = idx === 0 ? 'selected' : ''; 
             container.innerHTML += `<div class="chip ${isSelected}" onclick="selectChip(this)">${space}</div>`;
         });
     }
@@ -584,7 +621,6 @@
     }
 
     function simulateAnalysis() {
-        // Mock Loading -> Result
         router('s04-result');
     }
 
@@ -595,50 +631,7 @@
         target.style.border = type === 'neg' ? '2px solid var(--negative)' : '2px solid var(--positive)';
         setTimeout(() => target.style.border = 'none', 2000);
     }
-    // ▼▼▼ <script> 태그 안쪽, 기존 함수들 아래에 추가하세요 ▼▼▼
 
-    // 1. 카메라/갤러리 버튼을 누르면 숨겨둔 파일창을 클릭하게 함
-    function triggerCamera() {
-        document.getElementById('file-input').click();
-    }
-
-    // 2. 파일이 선택되면 실행되는 함수 (미리보기 처리 - 수정버전)
-    function handleFileSelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        
-        // 파일을 다 읽었을 때 실행되는 부분
-        reader.onload = function(e) {
-            // 1. 아까 ID를 붙인 이미지 태그를 찾습니다.
-            const imgElement = document.getElementById('preview-img');
-            
-            if (imgElement) {
-                // 2. 이미지 소스(src)를 방금 찍은 사진 데이터로 교체합니다.
-                imgElement.src = e.target.result;
-                
-                // 3. 스타일 보정 (투명도 제거 및 꽉 채우기 확실하게 적용)
-                imgElement.style.opacity = '1';
-                imgElement.style.width = '100%';
-                imgElement.style.height = '100%';
-                imgElement.style.objectFit = 'cover';
-            } else {
-                console.error("❌ 오류: 미리보기 이미지 태그(preview-img)를 찾을 수 없습니다.");
-            }
-
-            // 4. 화면을 이동시킵니다.
-            router('s03-capture');
-        };
-
-        // 파일을 읽기 시작합니다.
-        reader.readAsDataURL(file);
-        
-        // (중요) 동일한 파일을 다시 선택해도 작동하도록 값을 초기화합니다.
-        event.target.value = ''; 
-    }
-    
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 </script>
 </body>
 </html>
