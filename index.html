@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2E5A44">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>풍수 홈 스타일링 (Feng Shui Styling)</title>
+    <style>
+        /* =========================================
+           1. DESIGN SYSTEM (CSS Variables)
+           ========================================= */
+        :root {
+            /* Palette: Modern Zen */
+            --primary: #2E5A44;       /* Deep Forest Green */
+            --primary-dark: #1A3C34;
+            --secondary: #D4AF37;     /* Muted Gold */
+            --bg-color: #F4F4F2;      /* Warm Greige */
+            --white: #FFFFFF;
+            --text-main: #1A1A1A;
+            --text-sub: #767676;
+            --border: #E0E0E0;
+            
+            /* Status Colors */
+            --positive: #4A7C59;      /* Sage Green */
+            --negative: #C25E00;      /* Brick Orange */
+            --warning: #F59E0B;
+            
+            /* Grades */
+            --g-perfect: #15803d; --g-great: #22c55e; --g-good: #86efac;
+            --g-worst: #7f1d1d;   --g-bad: #ef4444;   --g-caution: #fdba74;
+
+            /* Spacing & Layout */
+            --safe-area-top: env(safe-area-inset-top, 20px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+            --header-height: 54px;
+            --radius-card: 16px;
+            --radius-btn: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.06);
+            
+            /* Animation */
+            --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+
+        /* =========================================
+           2. GLOBAL RESET & TYPOGRAPHY
+           ========================================= */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background-color: #E5E5E5;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; color: var(--text-main);
+        }
+        
+        /* Mobile Frame */
+        #app-frame {
+            width: 375px; height: 812px;
+            background-color: var(--bg-color);
+            border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative; overflow: hidden;
+            border: 8px solid #222;
+        }
+
+        /* Scrollbar Hide */
+        ::-webkit-scrollbar { display: none; }
+
+        /* Typography Utility */
+        .h1 { font-size: 24px; font-weight: 700; line-height: 1.4; }
+        .h2 { font-size: 18px; font-weight: 700; line-height: 1.4; }
+        .body-txt { font-size: 15px; font-weight: 400; line-height: 1.6; }
+        .caption { font-size: 12px; font-weight: 500; color: var(--text-sub); }
+        .text-primary { color: var(--primary); }
+        .text-neg { color: var(--negative); }
+        .text-pos { color: var(--positive); }
+
+        /* =========================================
+           3. UI COMPONENTS
+           ========================================= */
+        /* Buttons */
+        .btn {
+            width: 100%; padding: 16px; border-radius: var(--radius-btn);
+            font-size: 16px; font-weight: 700; text-align: center;
+            border: none; cursor: pointer; transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: var(--primary); color: var(--white); }
+        .btn-secondary { background-color: var(--white); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-text { background: transparent; color: var(--text-sub); font-size: 14px; margin-top: 10px; }
+
+        /* Navigation Bar */
+        .nav-bar {
+            height: var(--header-height);
+            padding: 0 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
+            font-weight: 700; font-size: 16px;
+        }
+        .nav-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px; }
+
+        /* Screen Transitions */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            overflow-y: auto;
+            display: flex; flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s var(--ease-out);
+            z-index: 10;
+        }
+        .screen.active { transform: translateX(0); z-index: 20; }
+        /* Special case for Splash */
+        #s00-splash { z-index: 999; transform: translateX(0); }
+        
+        /* Icons (SVG) */
+        .icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* =========================================
+           4. SCREEN SPECIFIC STYLES
+           ========================================= */
+        
+        /* S00: Splash */
+        #s00-splash { background: #000; justify-content: center; align-items: center; text-align: center; }
+        .splash-glow {
+            position: absolute; width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(212,175,55,0.4) 0%, rgba(0,0,0,0) 70%);
+            animation: pulse 3s infinite ease-in-out;
+        }
+        .splash-logo { 
+            position: relative; z-index: 2; color: var(--secondary); 
+            opacity: 0; animation: fadeUp 1s ease-out forwards 0.5s;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.1); } }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(20px); } }
+
+        /* S01: Profile */
+        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+        .profile-card {
+            background: var(--white); border: 1px solid var(--border);
+            border-radius: var(--radius-card); padding: 20px;
+            text-align: center; cursor: pointer; position: relative;
+            box-shadow: var(--shadow); transition: all 0.2s;
+        }
+        .profile-card.active { border: 2px solid var(--primary); background: #F0F5F3; }
+        .profile-card.add-btn { border: 1px dashed #999; background: transparent; box-shadow: none; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 140px; }
+        .p-avatar { font-size: 32px; margin-bottom: 10px; }
+        .p-check { position: absolute; top: 10px; right: 10px; color: var(--primary); display: none; }
+        .profile-card.active .p-check { display: block; }
+        
+        /* Modal */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 200;
+            display: none; align-items: flex-end;
+        }
+        .modal-sheet {
+            width: 100%; background: var(--white);
+            border-radius: 24px 24px 0 0; padding: 30px 20px;
+            animation: slideUp 0.3s var(--ease-out);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .input-wrap { margin-bottom: 20px; }
+        .input-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #555; }
+        .input-field { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 16px; outline: none; }
+
+        /* S02: Main */
+        .hero-section {
+            background: linear-gradient(180deg, var(--white) 0%, var(--bg-color) 100%);
+            padding: 40px 20px; text-align: center;
+        }
+        .camera-btn {
+            width: 140px; height: 140px; background: var(--primary);
+            border-radius: 50%; margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--white); box-shadow: 0 10px 25px rgba(46,90,68,0.4);
+            cursor: pointer;
+        }
+        .history-list { padding: 0 20px 20px; }
+        .history-item {
+            display: flex; align-items: center; background: var(--white);
+            padding: 15px; border-radius: 12px; margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer;
+        }
+        .h-thumb { width: 60px; height: 60px; background: #ddd; border-radius: 8px; margin-right: 15px; object-fit: cover; }
+        .score-badge {
+            background: #eee; padding: 4px 8px; border-radius: 6px;
+            font-weight: 700; font-size: 13px;
+        }
+
+        /* S03: Capture & Option */
+        .capture-view { flex: 1; background: #222; position: relative; }
+        .option-panel { background: var(--white); border-radius: 24px 24px 0 0; padding: 25px 20px; min-height: 400px; }
+        .tab-group { display: flex; gap: 8px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; text-align: center; font-weight: 600; cursor: pointer; }
+        .tab-btn.selected { background: var(--primary); color: var(--white); border-color: var(--primary); }
+        .chip-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 25px; }
+        .chip { padding: 8px 16px; background: #F5F5F5; border-radius: 20px; font-size: 14px; cursor: pointer; border: 1px solid transparent; }
+        .chip.selected { background: var(--white); border-color: var(--secondary); color: var(--secondary); font-weight: 700; box-shadow: 0 2px 8px rgba(212,175,55,0.2); }
+        .compass-ui {
+            background: #FAFAFA; padding: 15px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+        }
+
+        /* S04: Result & S05: History */
+        .result-header { padding: 30px 20px; background: var(--white); text-align: center; border-radius: 0 0 24px 24px; box-shadow: var(--shadow); }
+        .score-donut { font-size: 48px; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
+        .result-img-box {
+            position: relative; height: 320px; margin: 20px;
+            border-radius: var(--radius-card); overflow: hidden;
+            background-color: #ddd; background-size: cover; background-position: center;
+        }
+        .pin {
+            position: absolute; width: 32px; height: 32px; border-radius: 50%;
+            border: 2px solid var(--white); cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); animation: bounce 2s infinite;
+        }
+        .pin.pos { background: var(--positive); }
+        .pin.neg { background: var(--negative); }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        .report-card { background: var(--white); border-radius: var(--radius-card); margin: 0 20px 20px; padding: 20px; box-shadow: var(--shadow); }
+        .grade-badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; color: #fff; margin-right: 6px; text-transform: uppercase; }
+        .g-perfect { background: var(--g-perfect); } .g-great { background: var(--g-great); } .g-good { background: var(--g-good); }
+        .g-worst { background: var(--g-worst); } .g-bad { background: var(--g-bad); } .g-caution { background: var(--g-caution); }
+        
+        .report-row { margin-bottom: 15px; border-bottom: 1px solid #f5f5f5; padding-bottom: 15px; }
+        .report-row:last-child { border: none; margin-bottom: 0; padding-bottom: 0; }
+        .solution-box { background: #FFF5F5; padding: 12px; border-radius: 8px; color: #C53030; font-size: 13px; margin-top: 8px; line-height: 1.4; }
+
+        /* S06: Commerce */
+        .commerce-item {
+            display: flex; background: var(--white); padding: 15px;
+            border-radius: var(--radius-card); margin: 0 20px 15px;
+            border: 1px solid var(--border); cursor: pointer;
+        }
+        .c-thumb { width: 90px; height: 90px; border-radius: 8px; background: #eee; object-fit: cover; }
+        .c-info { flex: 1; padding-left: 15px; display: flex; flex-direction: column; justify-content: center; }
+        .c-badge {
+            display: inline-block; font-size: 11px; color: var(--primary);
+            background: #E6F4EA; padding: 3px 6px; border-radius: 4px;
+            width: fit-content; margin-bottom: 6px;
+        }
+        .c-source { font-size: 11px; color: #999; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+        .c-logo { width: 14px; height: 14px; border-radius: 50%; background: #ccc; }
+
+    </style>
+</head>
+<body>
+
+<div id="app-frame">
+    
+    <section id="s00-splash" class="screen active">
+        <div class="splash-glow"></div>
+        <div class="splash-logo">
+            <h1 style="font-size: 40px; margin-bottom: 10px; font-weight: 300;">開運</h1>
+            <p class="body-txt" style="color: var(--secondary); letter-spacing: 2px;">공간의 운을 틔우다</p>
+        </div>
+    </section>
+
+    <section id="s01-profile" class="screen">
+        <header class="nav-bar">
+            <div></div>
+            <span>운세 프로필</span>
+            <div></div>
+        </header>
+        <div style="padding: 20px 20px 10px;">
+            <h1 class="h1">누구의 공간을<br>진단할까요?</h1>
+            <p class="body-txt" style="color: var(--text-sub);">거주자의 기운에 따라 길흉이 달라집니다.</p>
+        </div>
+        <div class="profile-grid" id="profile-container">
+            </div>
+        <div style="padding: 20px; margin-top: auto;">
+            <button class="btn btn-primary" id="btn-select-profile">선택 완료</button>
+        </div>
+    </section>
+
+    <div id="modal-add-profile" class="modal-overlay">
+        <div class="modal-sheet">
+            <h2 class="h2" style="margin-bottom: 20px;">새로운 사람 추가</h2>
+            <div class="input-wrap">
+                <label class="input-label">이름</label>
+                <input type="text" class="input-field" placeholder="예: 변희창">
+            </div>
+            <div class="input-wrap">
+                <label class="input-label">생년월일</label>
+                <input type="date" class="input-field">
+            </div>
+            <button class="btn btn-primary" onclick="handleAddProfile()">운세 기운 저장하기</button>
+            <button class="btn btn-text" onclick="closeModal()">취소</button>
+        </div>
+    </div>
+
+    <section id="s02-main" class="screen">
+        <header class="nav-bar">
+            <div style="width: 24px;"></div>
+            <span>공간 진단</span>
+            <div style="width: 24px;"></div>
+        </header>
+        <div class="main-header" style="background:var(--white); padding: 15px 20px;">
+            <div style="display:inline-flex; align-items:center; font-weight:700; font-size:18px; cursor:pointer;" onclick="router('s01-profile')">
+                <span id="current-user-name">변희창님 기준</span>
+                <svg class="icon" style="width:16px; margin-left:4px;" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="caption" style="margin-top: 4px;">부족한 화(Fire) 기운을 채워야 합니다.</div>
+        </div>
+        
+        <div class="hero-section">
+            <p class="h2" style="margin-bottom: 30px;">공간의 흐름을 읽어보세요</p>
+            <div class="camera-btn" onclick="router('s03-capture')">
+                <svg class="icon" style="width:48px; height:48px;" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <button class="btn-secondary" style="width:auto; padding: 10px 20px; border-radius:20px; font-size:14px;" onclick="router('s03-capture')">
+                🖼️ 앨범에서 가져오기
+            </button>
+        </div>
+
+        <div style="padding: 20px 20px 10px;"><h2 class="h2">최근 진단 기록</h2></div>
+        <div class="history-list" id="history-container">
+            </div>
+    </section>
+
+    <section id="s03-capture" class="screen">
+        <div class="nav-bar" style="background:transparent; position:absolute; top:0; left:0; width:100%; border:none; color:white; z-index:50;">
+            <button class="nav-btn" style="color:white;" onclick="router('s02-main')">✕</button>
+        </div>
+        <div class="capture-view">
+            <img src="https://placehold.co/375x400/333/666?text=Camera+View" style="width:100%; height:100%; object-fit:cover; opacity:0.6;">
+        </div>
+        <div class="option-panel">
+            <h2 class="h2" style="margin-bottom: 15px;">어떤 공간인가요?</h2>
+            
+            <div class="tab-group">
+                <div class="tab-btn selected" onclick="toggleTab(this, 'home')">🏠 주거 공간</div>
+                <div class="tab-btn" onclick="toggleTab(this, 'commercial')">🏢 상업 공간</div>
+            </div>
+            
+            <div class="chip-group" id="space-chips">
+                </div>
+
+            <h2 class="h2" style="margin-bottom: 15px;">방위 확인</h2>
+            <div class="compass-ui">
+                <div>
+                    <span style="font-weight:700;">🧭 남 (South) 185°</span>
+                    <div class="caption">자동 감지됨</div>
+                </div>
+                <div style="color:var(--primary);">수정 ></div>
+            </div>
+
+            <button class="btn btn-primary" onclick="simulateAnalysis()">풍수 분석 시작하기</button>
+        </div>
+    </section>
+
+    <section id="s04-result" class="screen">
+        <header class="nav-bar">
+            <button class="nav-btn" onclick="router('s02-main')">←</button>
+            <span>진단 결과</span>
+            <div style="width:24px;"></div>
+        </header>
+
+        <div class="result-header">
+            <div class="score-donut">65<span style="font-size:24px;">점</span></div>
+            <p class="h2">"기운이 차갑습니다. 온기가 필요해요!"</p>
+        </div>
+
+        <div class="result-img-box" style="background-image: url('https://placehold.co/400x320/gray/white?text=Analyzed+Room');">
+            <div class="pin neg" style="top:40%; left:30%;" onclick="scrollToReport('neg')"></div>
+            <div class="pin pos" style="top:70%; left:60%;" onclick="scrollToReport('pos')"></div>
+        </div>
+
+        <div class="report-card" id="report-neg">
+            <h2 class="h2 text-neg" style="margin-bottom:15px;">⚠️ 개선이 필요한 점</h2>
+            <div class="report-row">
+                <div><span class="grade-badge g-worst">WORST</span> <b>침대 헤드가 문을 등짐</b></div>
+                <div class="solution-box">💡 심리적 불안을 야기합니다. 침대를 대각선 안쪽으로 이동하거나, 파티션으로 시선을 차단하세요.</div>
+            </div>
+            <div class="report-row">
+                <div><span class="grade-badge g-caution">CAUTION</span> <b>북향의 차가운 기운</b></div>
+            </div>
+        </div>
+
+        <div class="report-card" id="report-pos">
+            <h2 class="h2 text-pos" style="margin-bottom:15px;">✨ 훌륭한 점</h2>
+            <div class="report-row">
+                <div><span class="grade-badge g-perfect">PERFECT</span> <b>바닥에 잡동사니 없음</b></div>
+            </div>
+            <div class="report-row">
+                <div><span class="grade-badge g-good">GOOD</span> <b>안정적인 벽지 컬러</b></div>
+            </div>
+        </div>
+
+        <div style="padding: 0 20px 30px;">
+            <button class="btn btn-primary" onclick="router('s06-commerce')">개운(開運) 아이템 보러가기</button>
+        </div>
+    </section>
+
+    <section id="s05-history" class="screen">
+        <header class="nav-bar">
+            <button class="nav-btn" onclick="router('s02-main')">←</button>
+            <span>기록 상세 (24.01.08)</span>
+            <div style="width:24px;"></div> </header>
+        <div class="result-header" style="background:#F9F9F9;">
+            <div class="score-donut">82<span style="font-size:24px;">점</span></div>
+            <p class="h2">"재물운이 들어오는 배치입니다."</p>
+        </div>
+        <div class="result-img-box" style="background-image: url('https://placehold.co/400x320/eee/999?text=History+Image');">
+            <div class="pin pos" style="top:50%; left:50%;"></div>
+        </div>
+        <div class="report-card">
+            <h2 class="h2 text-pos" style="margin-bottom:15px;">✨ 훌륭한 점</h2>
+            <div class="report-row">
+                <div><span class="grade-badge g-great">GREAT</span> <b>현관의 밝은 조명</b></div>
+            </div>
+        </div>
+        <div style="text-align:center; color:#999; padding-bottom:30px; font-size:13px;">읽기 전용 모드입니다.</div>
+    </section>
+
+    <section id="s06-commerce" class="screen">
+        <header class="nav-bar">
+            <button class="nav-btn" onclick="router('s04-result')">←</button>
+            <span>맞춤 추천 아이템</span>
+            <div style="width:24px;"></div>
+        </header>
+        <div style="padding: 20px;">
+            <p class="body-txt" style="margin-bottom: 20px;">
+                <b>변희창</b>님의 부족한 <b>화(Fire)</b> 기운을<br>채워줄 오브젯을 추천합니다.
+            </p>
+
+            <div class="commerce-item" onclick="alert('쿠팡으로 연결됩니다.')">
+                <img src="https://placehold.co/90x90/orange/white?text=Lamp" class="c-thumb">
+                <div class="c-info">
+                    <span class="c-badge">🔥 양기 보충</span>
+                    <div style="font-weight:700; margin-bottom:4px;">웜톤 단 스탠드 조명</div>
+                    <div style="font-weight:700; font-size:16px;">28,900원</div>
+                    <div class="c-source"><div class="c-logo" style="background:red;"></div> Coupang</div>
+                </div>
+            </div>
+
+            <div class="commerce-item" onclick="alert('네이버쇼핑으로 연결됩니다.')">
+                <img src="https://placehold.co/90x90/red/white?text=Pillow" class="c-thumb">
+                <div class="c-info">
+                    <span class="c-badge">❤️ 혈관 건강</span>
+                    <div style="font-weight:700; margin-bottom:4px;">와인 호텔식 베개커버</div>
+                    <div style="font-weight:700; font-size:16px;">12,500원</div>
+                    <div class="c-source"><div class="c-logo" style="background:#03C75A;"></div> Naver</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    /* =========================================
+       5. JAVASCRIPT LOGIC
+       ========================================= */
+    
+    // --- Data Store ---
+    const appData = {
+        users: [
+            { id: 1, name: '변희창', animal: '🐯', element: '화(Fire) 부족' },
+        ],
+        currentUser: 1,
+        history: [
+            { id: 101, space: '거실 (남향)', date: '2026.01.08', score: 82, thumb: 'Living', type: 'pos' },
+            { id: 102, space: '욕실 (북동향)', date: '2025.12.25', score: 45, thumb: 'Bath', type: 'neg' }
+        ],
+        spaces: {
+            home: ['안방', '거실', '현관', '주방', '욕실', '서재', '아이방'],
+            commercial: ['출입구', '카운터', '대표실', '회의실', '개인책상', '탕비실']
+        }
+    };
+
+    // --- Router ---
+    function router(screenId) {
+        // Handle Back Button logic (Simple)
+        const screens = document.querySelectorAll('.screen');
+        screens.forEach(s => {
+            if(s.id === screenId) s.classList.add('active');
+            else if(s.id !== 's00-splash') s.classList.remove('active'); // Keep splash under if needed, but normally hide
+        });
+        
+        // Special init logic per screen
+        if (screenId === 's01-profile') renderProfiles();
+        if (screenId === 's02-main') renderHistory();
+        if (screenId === 's03-capture') initSpaceChips('home');
+    }
+
+    // --- S00: Splash Logic ---
+    window.onload = function() {
+        setTimeout(() => {
+            document.getElementById('s00-splash').style.transform = 'translateY(-100%)'; // Slide up
+            // Check session (Mock) -> Go to Profile first
+            router('s01-profile');
+        }, 2500);
+    };
+
+    // --- S01: Profile Logic ---
+    function renderProfiles() {
+        const container = document.getElementById('profile-container');
+        container.innerHTML = '';
+        
+        appData.users.forEach(u => {
+            const isActive = u.id === appData.currentUser ? 'active' : '';
+            const html = `
+                <div class="profile-card ${isActive}" onclick="selectUser(${u.id})">
+                    <div class="p-check">✓</div>
+                    <div class="p-avatar">${u.animal}</div>
+                    <div style="font-weight:700;">${u.name}</div>
+                    <div class="caption" style="margin-top:4px;">${u.element}</div>
+                </div>`;
+            container.innerHTML += html;
+        });
+
+        // Add Button
+        container.innerHTML += `
+            <div class="profile-card add-btn" onclick="openModal()">
+                <div style="font-size:30px; color:#999;">+</div>
+                <div class="caption">새 프로필</div>
+            </div>`;
+    }
+
+    function selectUser(id) {
+        appData.currentUser = id;
+        renderProfiles(); // Re-render to show active state
+    }
+
+    document.getElementById('btn-select-profile').onclick = function() {
+        router('s02-main');
+    };
+
+    // Modal Logic
+    function openModal() { document.getElementById('modal-add-profile').style.display = 'flex'; }
+    function closeModal() { document.getElementById('modal-add-profile').style.display = 'none'; }
+    function handleAddProfile() {
+        // Mock Add
+        appData.users.push({ id: Date.now(), name: '새 가족', animal: '🐰', element: '목(Wood) 부족' });
+        closeModal();
+        renderProfiles();
+    }
+
+    // --- S02: Main Logic ---
+    function renderHistory() {
+        const container = document.getElementById('history-container');
+        container.innerHTML = '';
+        appData.history.forEach(h => {
+            const scoreColor = h.score < 50 ? 'color:var(--negative);' : 'color:var(--primary);';
+            const html = `
+                <div class="history-item" onclick="router('s05-history')">
+                    <img src="https://placehold.co/60x60/eee/999?text=${h.thumb}" class="h-thumb">
+                    <div style="flex:1;">
+                        <div style="font-weight:700; font-size:15px;">${h.space}</div>
+                        <div class="caption" style="margin-top:3px;">${h.date}</div>
+                    </div>
+                    <div class="score-badge" style="${scoreColor}">${h.score}점</div>
+                </div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    // --- S03: Capture Logic ---
+    function toggleTab(el, type) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        initSpaceChips(type);
+    }
+
+    function initSpaceChips(type) {
+        const container = document.getElementById('space-chips');
+        container.innerHTML = '';
+        const list = appData.spaces[type];
+        list.forEach((space, idx) => {
+            const isSelected = idx === 0 ? 'selected' : ''; // Default select first
+            container.innerHTML += `<div class="chip ${isSelected}" onclick="selectChip(this)">${space}</div>`;
+        });
+    }
+
+    function selectChip(el) {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    function simulateAnalysis() {
+        // Mock Loading -> Result
+        router('s04-result');
+    }
+
+    // --- S04: Result Logic ---
+    function scrollToReport(type) {
+        const target = document.getElementById(type === 'neg' ? 'report-neg' : 'report-pos');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.style.border = type === 'neg' ? '2px solid var(--negative)' : '2px solid var(--positive)';
+        setTimeout(() => target.style.border = 'none', 2000);
+    }
+
+</script>
+</body>
+</html>
