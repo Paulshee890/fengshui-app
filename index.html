@@ -252,7 +252,7 @@
 <body>
 
 <div id="app-frame">
-    
+  <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">    
     <section id="s00-splash" class="screen active">
         <div class="splash-glow"></div>
         <div class="splash-logo">
@@ -310,10 +310,10 @@
         
         <div class="hero-section">
             <p class="h2" style="margin-bottom: 30px;">공간의 흐름을 읽어보세요</p>
-            <div class="camera-btn" onclick="router('s03-capture')">
+            <div class="camera-btn" onclick="triggerCamera()">
                 <svg class="icon" style="width:48px; height:48px;" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </div>
-            <button class="btn-secondary" style="width:auto; padding: 10px 20px; border-radius:20px; font-size:14px;" onclick="router('s03-capture')">
+            <button class="btn-secondary" style="width:auto; padding: 10px 20px; border-radius:20px; font-size:14px;" onclick="triggerCamera()">
                 🖼️ 앨범에서 가져오기
             </button>
         </div>
@@ -595,7 +595,35 @@
         target.style.border = type === 'neg' ? '2px solid var(--negative)' : '2px solid var(--positive)';
         setTimeout(() => target.style.border = 'none', 2000);
     }
+    // ▼▼▼ <script> 태그 안쪽, 기존 함수들 아래에 추가하세요 ▼▼▼
 
+    // 1. 카메라/갤러리 버튼을 누르면 숨겨둔 파일창을 클릭하게 함
+    function triggerCamera() {
+        document.getElementById('file-input').click();
+    }
+
+    // 2. 파일이 선택되면 실행되는 함수 (미리보기 처리)
+    function handleFileSelect(event) {
+        const file = event.target.files[0]; // 사용자가 선택한 파일
+        if (!file) return;
+
+        // 파일을 읽어서 화면에 미리보기로 보여줌
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // S03 화면의 이미지 태그를 찾아서 소스(src)를 바꿈
+            const previewImg = document.querySelector('#s03-capture .capture-view img');
+            if(previewImg) {
+                previewImg.src = e.target.result;
+                previewImg.style.opacity = '1'; // 투명도 복구
+            }
+            
+            // 화면 이동 (S02 -> S03)
+            router('s03-capture');
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 </script>
 </body>
 </html>
